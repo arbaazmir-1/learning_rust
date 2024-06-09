@@ -160,7 +160,7 @@ fn multiply(num1: i32, num2: i32) -> i32 {
 }
 // multiple return with tuples love
 fn cal_me(num1: i32, num2: i32) -> (i32, i32, i32) {
-    return (num1 * num2, num2 * num2, num1 + num2);
+    (num1 * num2, num2 * num2, num1 + num2)
 }
 
 fn conditional_statements(num1: u32) {
@@ -201,4 +201,119 @@ fn control_flow() {
     stdin().read_line(&mut name).expect("Something is wrong");
     let name: &str = name.trim();
     println!("Your name is {name}")
+}
+
+// ownership in rust
+
+// taking ownership and giving back isn't what the convention of rust is. Rather borrowing the value is.
+fn take_give_ownership(mut input_vector: Vec<u32>) -> Vec<u32> {
+    // This function takes ownership of input_vector, modifies it by adding a value, and then returns it.
+    // This means that ownership is effectively given back to the function that called this one.
+    input_vector.push(100);
+    input_vector
+}
+
+fn demonstrate_ownership_in_rust(input_vector: Vec<u32>) {
+    // Create a string
+    let original_string: String = String::from("Life is so good");
+
+    // Clone the string to a new variable. This allows us to use the original string later,
+    // as Rust's ownership model means the original string would be moved, not copied, if we assigned it to a new variable.
+    let cloned_string = original_string.clone();
+
+    // We can print the original string because we cloned it, not moved it.
+    println!("{}", original_string);
+
+    // Primitive data types like bool, char, int are stored entirely on the stack.
+    // This means they are copied, not moved, when assigned to a new variable.
+    let original_int = 15;
+    let copied_int = original_int;
+
+    // We can print the original int because it was copied, not moved.
+    println!("original_int is {}", original_int);
+
+    // When this function is called and the input_vector is passed (a variable set in the calling function),
+    // the original vector will be cleared from memory. The input_vector in this function will persist until
+    // this function finishes execution, at which point it too is cleaned up.
+    println!("input_vector : {:?}", input_vector);
+    // Pass ownership of input_vector to take_give_ownership function
+    let mut modified_vector = take_give_ownership(input_vector);
+
+    // We can still use modified_vector here because take_give_ownership returned it, giving ownership back to this function.
+    println!("modified_vector : {:?}", modified_vector);
+
+    // Demonstrate borrowing in Rust
+    // Rule 1 is that we don't talk about fight club lol
+    // Rule 1: At any given time, you can have either one mutable reference or any number of immutable references.
+    // Rule 2: References must always be valid.
+
+    // Borrow modified_vector as a mutable reference. This reference is valid until the end of the current scope.
+    let first_mutable_reference = &mut modified_vector;
+
+    // At this point, first_mutable_reference goes out of scope, so we can create a new mutable reference.
+    let second_mutable_reference = &mut modified_vector;
+
+    // This line would violate Rule 1 if uncommented, as it attempts to use two mutable references at the same time.
+    // println!("{:?} {:?}", first_mutable_reference, second_mutable_reference);
+
+    // we can have infinite number of immutable reference such as
+    let infinite_one = &modified_vector;
+    let infinite_two = &modified_vector;
+    // let mutable_infinite_one = &mut modified_vector; // this will two an error as we can have either infinite immuatble or one mutable ref
+    println!("{:?} {:?}", infinite_one, infinite_two); // no error thrown
+    let mutable_infinite_one = &mut modified_vector; // this works here because the before two are out of scope
+
+    // This block of code is trying to create a reference to a vector that is defined inside a scope, and then use that reference outside the scope.
+    // However, this will not work in Rust due to its ownership rules.
+
+    /*
+    let some_vec = {
+        // Define a vector inside this scope
+        let vec_in_scope = vec![1, 2, 4];
+
+        // Try to return a reference to the vector
+        &vec_in_scope // This will throw an error because `vec_in_scope` does not live long enough
+    };
+
+    // Here, we're trying to use `some_vec` outside the scope where `vec_in_scope` was defined.
+    // But `vec_in_scope` was dropped at the end of the inner scope, so `some_vec` is now a dangling reference.
+    // Rust's borrow checker will give a compile-time error, preventing this.
+    */
+
+    // To pass a reference to a function in Rust, we use the "&" symbol in the type of the parameter.
+    // This indicates that the function does not take ownership of the value, but instead borrows it for the duration of the function call.
+
+    /*
+    fn print_vector(vec_data: &Vec<u32>) {
+        // This function borrows `vec_data` for the duration of the function.
+        // It does not take ownership, so the original vector can still be used after this function call.
+        println!("{:?}", vec_data);
+    }
+    */
+
+    // we can call this function with a reference to a vector like this:
+    /*
+    let data = vec![1, 2, 3];
+    print_vector(&data);
+    */
+}
+
+fn dereference_in_rust() {
+    // Declare a mutable variable `x` and initialize it with the value 10
+    let mut x = 10;
+
+    // Declare a mutable reference `y` to `x`
+    let y = &mut x;
+
+    // Dereference `y` to get the value of `x` and assign it to `something_else`
+    // At this point, `something_else` is 10, and `x` is also 10
+    let something_else = *y;
+
+    // Dereference `y` and change the value of `x` to 20
+    // Now, `x` is 20, but `something_else` is still 10 because it was assigned the value of `x` before `x` was changed
+    *y = 20;
+
+    print!("{} is not {}", something_else, *y); // This will print: "10 is not 20"
+
+    // this won't work with a heap allocated data such as vec
 }
